@@ -1,0 +1,26 @@
+{
+  "name": "anibas-feed-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "svelte": "^5.19.7",
+    "vite": "^6.1.0"
+  },
+  "overrides": {
+    "rollup": "npm:@rollup/wasm-node@4.60.4"
+  },
+  "devDependencies": {
+    "@tsconfig/svelte": "^5.0.4",
+    "@types/node": "^22.10.7",
+    "svelte-check": "^4.1.4",
+    "typescript": "^5.7.3"
+  }
+}

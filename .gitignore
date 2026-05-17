@@ -1,0 +1,15 @@
+.DS_Store
+.env
+
+# Go
+backend/bin/
+backend/tmp/
+
+# Node / Svelte
+frontend/node_modules/
+frontend/dist/
+frontend/.svelte-kit/
+
+# Docker / local data
+postgres-data/
+
