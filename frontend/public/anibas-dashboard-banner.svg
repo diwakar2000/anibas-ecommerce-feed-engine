@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 420" role="img" aria-labelledby="title desc">
+  <title id="title">Anibas catalog transformation banner</title>
+  <desc id="desc">Marketplace catalog channels merging into a clean product feed path.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1440" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f3f32"/>
+      <stop offset="0.46" stop-color="#14645a"/>
+      <stop offset="1" stop-color="#f47b48"/>
+    </linearGradient>
+    <linearGradient id="line" x1="176" y1="85" x2="1264" y2="328" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38bdf8"/>
+      <stop offset="0.32" stop-color="#2dd4bf"/>
+      <stop offset="0.7" stop-color="#86efac"/>
+      <stop offset="1" stop-color="#fed7aa"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="matrix(560 0 0 260 720 194)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-50%" width="140%" height="200%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#06251e" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+  <rect width="1440" height="420" rx="0" fill="url(#bg)"/>
+  <rect width="1440" height="420" fill="url(#glow)"/>
+  <path d="M0 330c158-24 272-20 410 14 188 47 362 57 554 18 181-37 307-104 476-83v141H0z" fill="#f8fff9" opacity="0.13"/>
+  <g opacity="0.16" stroke="#ffffff">
+    <path d="M120 62h1200M120 132h1200M120 202h1200M120 272h1200M120 342h1200"/>
+    <path d="M216 40v340M456 40v340M696 40v340M936 40v340M1176 40v340"/>
+  </g>
+  <g fill="none" stroke="url(#line)" stroke-linecap="round" filter="url(#shadow)">
+    <path d="M180 98c150 0 176 112 336 112h160" stroke-width="16"/>
+    <path d="M180 210h496" stroke-width="16"/>
+    <path d="M180 322c154 0 188-112 346-112h150" stroke-width="16"/>
+    <path d="M764 210h190c96 0 138-84 262-84" stroke-width="16"/>
+    <path d="M764 210h190c96 0 138 84 262 84" stroke-width="16"/>
+  </g>
+  <g>
+    <circle cx="180" cy="98" r="46" fill="#0ea5e9"/>
+    <circle cx="180" cy="210" r="46" fill="#e11d48"/>
+    <circle cx="180" cy="322" r="46" fill="#22c55e"/>
+    <circle cx="720" cy="210" r="58" fill="#f8fff9"/>
+    <circle cx="1216" cy="126" r="48" fill="#fde68a"/>
+    <circle cx="1216" cy="294" r="48" fill="#ffffff"/>
+    <path d="M696 210h48M720 186v48" stroke="#123126" stroke-width="12" stroke-linecap="round" opacity="0.66"/>
+    <path d="M1192 126h48M1192 294h48" stroke="#123126" stroke-width="12" stroke-linecap="round" opacity="0.44"/>
+  </g>
+</svg>

@@ -1,81 +1,97 @@
 # Anibas E-commerce Feed Engine
 
-A small full-stack starter with:
+Anibas Feed Engine is a catalog conversion tool for small social-commerce sellers. It prepares product listing files for marketplace and commerce-channel feeds such as Facebook Commerce, Instagram Shops, TikTok Shop, Shopify, WooCommerce, and Google Merchant Center.
 
-- Svelte + Vite frontend
-- Go backend using Gin
-- Postgres persistence through Bun ORM
-- Docker Compose orchestration on lightweight Alpine-based images
+This project is not an ecommerce storefront. It does not handle carts, checkout, themes, payments, order tracking, CRM, or real-time marketplace sync.
+
+## Current Architecture
+
+The app is now a fully static frontend:
+
+- Svelte + Vite UI
+- Go transformation engine compiled to WebAssembly
+- Browser `localStorage` for saved imports, exports, and mapping profiles
+- No Postgres
+- No Gin API server
+- No Docker runtime required
+- GitHub Pages deployment through GitHub Actions
+
+Go still owns the catalog transformation logic, but it runs in the browser as `anibas.wasm`.
 
 ## Project Layout
 
 ```text
 .
-├── backend/        # Go API, repositories, service wiring, database setup
-├── frontend/       # Svelte/Vite UI
-├── docker-compose.yml
-└── .env.example
+├── backend/                 # Pure Go domain/importer/mapper/validator/exporter code plus WASM entrypoint
+│   └── cmd/wasm             # Browser-facing Go WASM bridge
+├── frontend/                # Svelte/Vite static app
+└── .github/workflows/       # GitHub Pages CI/CD
 ```
 
-## Quick Start
+## Local Development
+
+Build the WASM engine, then run the frontend:
 
 ```bash
-cp .env.example .env
-docker compose up --build
+cd frontend
+npm install
+npm run wasm:build
+npm run dev
 ```
 
 Open:
 
 - Frontend: http://localhost:5173
-- Backend health: http://localhost:8080/healthz
-- Products API: http://localhost:8080/api/v1/products
 
-## Local Development
-
-Backend:
-
-```bash
-cd backend
-go mod tidy
-go run ./cmd/api
-```
-
-Frontend:
+## Build
 
 ```bash
 cd frontend
-npm install
-npm run dev
+npm run build
 ```
 
-When running outside Docker, point the backend at your local Postgres with:
+The `prebuild` script compiles:
+
+- `frontend/public/anibas.wasm`
+- `frontend/public/wasm_exec.js`
+
+Vite then copies them into the static `dist` output.
+
+## Tests And Checks
 
 ```bash
-POSTGRES_HOST=localhost go run ./cmd/api
+cd backend
+go test ./...
+
+cd ../frontend
+npm run check
+npm run build
 ```
 
-## API
+## GitHub Pages
 
-`GET /healthz`
+The workflow at `.github/workflows/deploy-pages.yml`:
 
-Returns service and database status.
+1. Installs Go and Node.
+2. Runs Go tests.
+3. Runs Svelte checks.
+4. Builds the Go WASM engine.
+5. Builds the Vite app with a GitHub Pages base path.
+6. Deploys `frontend/dist` to GitHub Pages.
 
-`GET /api/v1/products`
+Enable GitHub Pages in repository settings and choose GitHub Actions as the source.
 
-Lists products ordered by creation time.
+## Current MVP
 
-`POST /api/v1/products`
-
-Creates a product.
-
-```json
-{
-  "sku": "ANI-001",
-  "title": "Organic Cotton T-shirt",
-  "description": "Soft everyday tee",
-  "price_cents": 2499,
-  "currency": "USD",
-  "inventory": 42
-}
-```
-
+- CSV catalog upload in the browser
+- detected columns
+- first-20-row preview
+- auto field mapping suggestions
+- case-insensitive mapping
+- static mapping values
+- price/currency extraction from combined price strings
+- target-specific required, conditional, and recommended fields
+- validation findings
+- CSV exports for Facebook Catalog, Instagram Shops, Google Merchant Center, TikTok Catalog, Shopify, and WooCommerce
+- saved mapping profiles in browser storage
+- saved imports and export records in browser storage

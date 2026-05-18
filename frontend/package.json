@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
+    "wasm:build": "mkdir -p public && cp \"$(go env GOROOT)/lib/wasm/wasm_exec.js\" public/wasm_exec.js && cd ../backend && GOOS=js GOARCH=wasm go build -o ../frontend/public/anibas.wasm ./cmd/wasm",
+    "prebuild": "npm run wasm:build",
     "build": "vite build",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "preview": "vite preview --host 0.0.0.0"

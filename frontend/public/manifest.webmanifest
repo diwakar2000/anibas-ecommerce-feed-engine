@@ -1,0 +1,18 @@
+{
+  "name": "Anibas Feed Engine",
+  "short_name": "Anibas",
+  "description": "Offline-ready catalog conversion and marketplace feed transformation.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3fbf9",
+  "theme_color": "#183f31",
+  "icons": [
+    {
+      "src": "anibas-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

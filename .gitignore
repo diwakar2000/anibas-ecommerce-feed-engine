@@ -9,7 +9,5 @@ backend/tmp/
 frontend/node_modules/
 frontend/dist/
 frontend/.svelte-kit/
-
-# Docker / local data
-postgres-data/
-
+frontend/public/anibas.wasm
+frontend/public/wasm_exec.js
