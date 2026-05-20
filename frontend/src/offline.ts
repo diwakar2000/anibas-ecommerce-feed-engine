@@ -1,13 +1,22 @@
-export function registerOfflineSupport() {
-  void requestPersistentStorage();
+let registrationStarted = false;
 
+export function registerOfflineSupport() {
   if (!("serviceWorker" in navigator) || !import.meta.env.PROD || !window.isSecureContext) {
     return;
   }
 
-  window.addEventListener("load", () => {
+  if (registrationStarted) {
+    return;
+  }
+
+  registrationStarted = true;
+  if (document.readyState === "complete") {
     void registerServiceWorker();
-  });
+  } else {
+    window.addEventListener("load", () => {
+      void registerServiceWorker();
+    });
+  }
 }
 
 async function registerServiceWorker() {
@@ -20,19 +29,5 @@ async function registerServiceWorker() {
     await registration.update();
   } catch (err) {
     console.warn("Offline cache registration failed", err);
-  }
-}
-
-async function requestPersistentStorage() {
-  if (!("storage" in navigator) || !navigator.storage.persist || !navigator.storage.persisted) {
-    return;
-  }
-
-  try {
-    if (!(await navigator.storage.persisted())) {
-      await navigator.storage.persist();
-    }
-  } catch (err) {
-    console.warn("Persistent browser storage request failed", err);
   }
 }

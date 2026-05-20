@@ -5,7 +5,18 @@
   import PreviewTable from "./components/PreviewTable.svelte";
   import UploadCatalog from "./components/UploadCatalog.svelte";
   import ValidationResults from "./components/ValidationResults.svelte";
-  import { dashboardData, findImport, removeImport, saveExport, saveImport } from "./storage";
+  import { registerOfflineSupport } from "./offline";
+  import {
+    configureStorage,
+    dashboardData,
+    findImport,
+    removeImport,
+    requestPersistentStorage,
+    saveExport,
+    saveImport,
+    storageAccessStatus,
+    type StorageMode
+  } from "./storage";
   import {
     fallbackSchemaFields,
     fallbackTargetRequirements,
@@ -31,6 +42,10 @@
   let activeScreen = $state<Screen>("dashboard");
   let apiError = $state("");
   let storageError = $state("");
+  let storageNotice = $state("");
+  let storageMode = $state<StorageMode | null>(null);
+  let storagePromptVisible = $state(false);
+  let storageDecisionBusy = $state(false);
   let dashboard = $state<DashboardData>({
     recent_imports: [],
     recent_exports: []
@@ -48,6 +63,10 @@
   let initialized = false;
 
   async function loadDashboard() {
+    if (!storageMode) {
+      return;
+    }
+
     try {
       dashboard = await dashboardData();
       storageError = "";
@@ -61,7 +80,7 @@
   }
 
   async function initializeApp() {
-    await loadDashboard();
+    await initializeStorage();
     loadingEngine = true;
     try {
       const engine = await loadAnibasWasm();
@@ -76,6 +95,60 @@
       apiError = err instanceof Error ? err.message : "WASM engine unavailable";
     } finally {
       loadingEngine = false;
+    }
+  }
+
+  async function initializeStorage() {
+    const status = await storageAccessStatus();
+    storageNotice = status.message;
+
+    if (status.requiresPrompt || !status.recommendedMode) {
+      storagePromptVisible = true;
+      return;
+    }
+
+    await activateStorage(status.recommendedMode, status.message);
+  }
+
+  async function activateStorage(mode: StorageMode, notice = "") {
+    configureStorage(mode);
+    storageMode = mode;
+    storagePromptVisible = false;
+    storageNotice = notice;
+    registerOfflineSupport();
+    await loadDashboard();
+  }
+
+  async function usePrivateBrowserStorage() {
+    storageDecisionBusy = true;
+    storageError = "";
+
+    try {
+      const persisted = await requestPersistentStorage();
+      if (persisted) {
+        await activateStorage("indexeddb");
+      } else {
+        await activateStorage(
+          "localstorage",
+          "Private database access was not granted. Using limited local storage."
+        );
+      }
+    } finally {
+      storageDecisionBusy = false;
+    }
+  }
+
+  async function useLimitedBrowserStorage() {
+    storageDecisionBusy = true;
+    storageError = "";
+
+    try {
+      await activateStorage(
+        "localstorage",
+        "Using limited local storage."
+      );
+    } finally {
+      storageDecisionBusy = false;
     }
   }
 
@@ -319,10 +392,42 @@
       <span></span>
       {apiError ? "WASM offline" : loadingEngine ? "WASM loading" : "WASM ready"}
     </div>
+
+    {#if storageMode === "localstorage" && !storagePromptVisible}
+      <div class="storage-chip" title="Catalog data is saved only in this browser. Database storage can hold larger catalog previews.">
+        <span>{storageNotice || "Limited storage"}</span>
+        <button type="button" disabled={storageDecisionBusy} onclick={usePrivateBrowserStorage}>
+          {storageDecisionBusy ? "Checking" : "Allow DB"}
+        </button>
+      </div>
+    {/if}
   </header>
 
   {#if apiError || storageError}
     <p class="alert">{apiError || storageError}</p>
+  {/if}
+
+  {#if storagePromptVisible}
+    <div class="consent-backdrop">
+      <div class="storage-consent" role="dialog" aria-modal="true" aria-labelledby="storage-title">
+        <p>Private browser storage</p>
+        <h2 id="storage-title">Save catalog work only on this device</h2>
+        <strong>We collect no data. No uploads. No tracking. Your product files and mappings stay inside this browser.</strong>
+        <span>
+          Anibas needs browser storage to remember imports, saved mapping profiles, and offline catalog work.
+          Approving private storage enables IndexedDB for larger catalog previews. If permission is denied,
+          Anibas will continue with limited localStorage fallback.
+        </span>
+        <div class="consent-actions">
+          <button type="button" disabled={storageDecisionBusy} onclick={usePrivateBrowserStorage}>
+            {storageDecisionBusy ? "Checking..." : "Use Private Storage"}
+          </button>
+          <button class="secondary" type="button" disabled={storageDecisionBusy} onclick={useLimitedBrowserStorage}>
+            Continue Limited
+          </button>
+        </div>
+      </div>
+    </div>
   {/if}
 
   {#if activeScreen === "dashboard"}
@@ -647,6 +752,44 @@
     background: #c94b37;
   }
 
+  .storage-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 280px;
+    min-height: 34px;
+    border: 1px solid rgb(199 215 209 / 0.8);
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.62);
+    color: #40564d;
+    padding: 4px 5px 4px 12px;
+  }
+
+  .storage-chip span {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .storage-chip button {
+    flex: 0 0 auto;
+    min-height: 26px;
+    border-radius: 999px;
+    background: #ffffff;
+    box-shadow: none;
+    color: #245f4b;
+    font-size: 0.74rem;
+    padding: 0 9px;
+  }
+
+  .storage-chip button:hover {
+    box-shadow: none;
+    transform: none;
+  }
+
   .workflow-shell {
     display: grid;
     gap: 16px;
@@ -796,6 +939,78 @@
     padding: 10px 12px;
   }
 
+  .consent-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(circle at 50% 32%, rgb(20 184 166 / 0.18), transparent 20rem),
+      rgb(9 21 18 / 0.42);
+    padding: 22px;
+    backdrop-filter: blur(8px);
+  }
+
+  .storage-consent {
+    display: grid;
+    gap: 14px;
+    width: min(100%, 560px);
+    border: 1px solid rgb(255 255 255 / 0.68);
+    border-radius: 24px;
+    background: rgb(255 255 255 / 0.88);
+    box-shadow: 0 30px 90px rgb(10 21 18 / 0.32);
+    padding: 24px;
+  }
+
+  .storage-consent p,
+  .storage-consent h2,
+  .storage-consent span {
+    margin: 0;
+  }
+
+  .storage-consent p {
+    color: #287357;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  .storage-consent h2 {
+    color: #13251f;
+    font-size: clamp(1.55rem, 4vw, 2.25rem);
+    line-height: 1.05;
+  }
+
+  .storage-consent strong {
+    display: block;
+    border: 1px solid rgb(46 125 91 / 0.24);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgb(232 252 246 / 0.98), rgb(255 255 255 / 0.9));
+    color: #174936;
+    font-size: 1.04rem;
+    line-height: 1.45;
+    padding: 14px;
+  }
+
+  .storage-consent span {
+    color: #52645f;
+    line-height: 1.55;
+  }
+
+  .consent-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 4px;
+  }
+
+  .consent-actions button {
+    min-width: 168px;
+  }
+
   .upload-grid {
     display: grid;
     grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
@@ -853,6 +1068,11 @@
     .toolbar-actions,
     .toolbar-actions span,
     .toolbar-actions button {
+      width: 100%;
+    }
+
+    .consent-actions,
+    .consent-actions button {
       width: 100%;
     }
 
